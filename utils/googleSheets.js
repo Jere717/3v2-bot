@@ -7,7 +7,7 @@
 const fetch = require('node-fetch');
 
 // Cambia esta URL por la de tu App Script desplegado
-const SHEET_CONFIG_URL = 'https://script.google.com/macros/s/AKfycbz8FuMOYOo5Kv5-J2JXFLk07SVbhT7UopfqZ94xYQolDMvAHZCYNZD422wZefLBhVKNJQ/exec';
+const SHEET_CONFIG_URL = 'https://script.google.com/macros/s/AKfycbytspTzI1qZvRT3uVWoFp9jEdNjuAa0sy4WIDNVXbE8nv4ps7WvE3QCK9Rha3NVhf-P/exec';
 
 async function getSheetConfig() {
   const res = await fetch(SHEET_CONFIG_URL, {

@@ -219,6 +219,7 @@ function onOpen() {
 function createMenus() {
   var menu = SpreadsheetApp.getUi().createMenu("Whatsapp");
   menu.addItem('Obtener TOKEN Session', 'qrwhatsapp');
+  menu.addItem('Mostrar QR WhatsApp', 'mostrarQR');
   menu.addItem('Enviar Mensaje Manual', 'enviarwhatsapp');
   menu.addItem('Validar Numeros', 'validarwhatsapp');
   menu.addItem('Enviar Mensaje Manual con validacion', 'enviarwhatsappvalidacion');
@@ -1133,4 +1134,17 @@ function doPost(e) {
     }
   }
   return ContentService.createTextOutput(respuesta).setMimeType(ContentService.MimeType.JSON);
+}
+
+// Cosas nuevas mias
+function mostrarQR() {
+  var response = UrlFetchApp.fetch('https://usual-heather-tattosedm-faeac365.koyeb.app/qr');
+  var data = JSON.parse(response.getContentText());
+  if (data.status == '0') {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Configuracion');
+    sheet.getRange('B2').setValue(data.qr_texto); // Texto QR
+    sheet.getRange('C2').setValue('=IMAGE("' + data.qr_url + '")'); // Imagen QR
+  } else {
+    SpreadsheetApp.getUi().alert(data.message);
+  }
 }

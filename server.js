@@ -5,6 +5,8 @@ const { generarQR } = require('./utils/qr'); // Asegúrate de que la ruta sea co
 // const { getSheetConfig, updateSheet } = require('./utils/googleSheets'); // Uncomment when utils ready
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(bodyParser.json());
@@ -19,10 +21,17 @@ const client = new Client({
   }
 });
 
-client.on('qr', (qr) => {
+client.on('qr', async (qr) => {
   qrString = qr;
   clientReady = false;
   console.log('QR recibido, esperando escaneo...');
+  // Generar y guardar el QR como imagen PNG
+  try {
+    const qrImagePath = path.join(__dirname, 'qr.png');
+    await qrcode.toFile(qrImagePath, qr);
+  } catch (err) {
+    console.error('Error guardando QR como imagen:', err);
+  }
 });
 
 client.on('ready', () => {
@@ -76,12 +85,23 @@ app.get('/', (req, res) => res.send('Bot activo'));
 
 app.get('/qr', async (req, res) => {
   if (qrString) {
-    const qrDataUrl = await qrcode.toDataURL(qrString);
-    res.json({ status: '0', qr: qrDataUrl });
+    // Devolver el texto y la URL pública de la imagen
+    const qrUrl = req.protocol + '://' + req.get('host') + '/qr.png';
+    res.json({ status: '0', qr_texto: qrString, qr_url: qrUrl });
   } else if (clientReady) {
     res.json({ status: '1', message: 'Ya conectado' });
   } else {
     res.json({ status: '-1', message: 'Esperando QR...' });
+  }
+});
+
+// Endpoint para servir la imagen QR
+app.get('/qr.png', (req, res) => {
+  const qrImagePath = path.join(__dirname, 'qr.png');
+  if (fs.existsSync(qrImagePath)) {
+    res.sendFile(qrImagePath);
+  } else {
+    res.status(404).send('QR no generado');
   }
 });
 

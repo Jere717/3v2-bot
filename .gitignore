@@ -1,3 +1,6 @@
 node_modules
 dwenv
 APP-SCRIPT.js
+sessions
+.wwebjs_cache
+qr.png

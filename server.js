@@ -2,12 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const { generarQR } = require('./utils/qr'); // Asegúrate de que la ruta sea correcta
-const { getSheetConfig } = require('./utils/googleSheets');
+// const { getSheetConfig, updateSheet } = require('./utils/googleSheets'); // Uncomment when utils ready
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
 
 const app = express();
 app.use(bodyParser.json());
@@ -69,52 +68,13 @@ client.on('disconnected', (reason) => {
   console.log('Cliente desconectado:', reason);
 });
 
-async function getMistralResponse(userMessage, config) {
-  // El token está en config[7][3] (fila 8, columna 4)
-  const mistralToken = config[7][3];
-  if (!mistralToken) throw new Error('Token de Mistral no configurado en el Sheet.');
-  // Puedes personalizar el prompt/contexto usando otras celdas del Sheet
-  const contexto = (config[8] && config[8][1]) ? config[8][1] : '';
-  const prompt = `${contexto}\nUsuario: ${userMessage}\nBot:`;
-
-  const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${mistralToken}`
-    },
-    body: JSON.stringify({
-      model: 'mistral-medium', // Puedes parametrizar esto desde el Sheet si lo deseas
-      messages: [
-        { role: 'system', content: contexto },
-        { role: 'user', content: userMessage }
-      ]
-    })
-  });
-  if (!res.ok) throw new Error('Error en la API de Mistral: ' + (await res.text()));
-  const data = await res.json();
-  return data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content ? data.choices[0].message.content.trim() : 'No hay respuesta de Mistral.';
-}
-
 client.on('message', async msg => {
-  try {
-    const config = await getSheetConfig();
-    // Leer whitelist activada y lista de números desde la columna J (índice 9)
-    const whitelistActive = (config[1][9] + '').toUpperCase() === 'SI'; // J2
-    const whitelistNumbers = (config[2][9] + '').split('-').map(n => n.trim()); // J3
-    const senderNumber = msg.from.replace(/@c\.us$/, ''); // Quita el sufijo de WhatsApp
-
-    if (whitelistActive && !whitelistNumbers.includes(senderNumber)) {
-      console.log('Mensaje ignorado de', senderNumber, 'por whitelist.');
-      return; // Ignora mensajes de números no autorizados
-    }
-
-    const respuesta = await getMistralResponse(msg.body, config);
-    await msg.reply(respuesta);
-  } catch (err) {
-    console.error('Error al responder con Mistral:', err);
-    await msg.reply('Ocurrió un error al consultar la IA.');
-  }
+  // Aquí puedes consultar el Sheet y responder usando Mistral
+  // const config = await getSheetConfig();
+  // const mistralReply = await getMistralResponse(msg.body, config);
+  // msg.reply(mistralReply);
+  // await logToSheet(msg.from, msg.body, mistralReply);
+  msg.reply('Ignoren estos mensajes. Estoy programando un BOT que los envia automaticamente y necesito saber si funciona. Disculpen');
 });
 
 client.initialize();
@@ -170,29 +130,6 @@ app.get('/qr.png', (req, res) => {
     res.sendFile(qrImagePath);
   } else {
     res.status(404).send('QR no generado');
-  }
-});
-
-// Endpoint para resetear la sesión de WhatsApp
-app.get('/reset-session', async (req, res) => {
-  try {
-    const sessionsPath = path.join(__dirname, 'sessions');
-    if (fs.existsSync(sessionsPath)) {
-      fs.rmSync(sessionsPath, { recursive: true, force: true });
-      console.log('Carpeta de sesión eliminada.');
-    }
-    // Reiniciar el cliente
-    if (client) {
-      await client.destroy();
-    }
-    setTimeout(() => {
-      client.initialize();
-      console.log('Cliente reinicializado tras reset de sesión.');
-    }, 2000);
-    res.send('Sesión eliminada y bot reiniciado. Escanea un nuevo QR.');
-  } catch (err) {
-    console.error('Error al resetear la sesión:', err);
-    res.status(500).send('Error al resetear la sesión: ' + err.message);
   }
 });
 

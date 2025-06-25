@@ -13,7 +13,10 @@ let qrString = null;
 let clientReady = false;
 
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './sessions' })
+  authStrategy: new LocalAuth({ dataPath: './sessions' }),
+  puppeteer: {
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  }
 });
 
 client.on('qr', (qr) => {

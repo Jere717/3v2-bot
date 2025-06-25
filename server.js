@@ -173,5 +173,28 @@ app.get('/qr.png', (req, res) => {
   }
 });
 
+// Endpoint para resetear la sesión de WhatsApp
+app.get('/reset-session', async (req, res) => {
+  try {
+    const sessionsPath = path.join(__dirname, 'sessions');
+    if (fs.existsSync(sessionsPath)) {
+      fs.rmSync(sessionsPath, { recursive: true, force: true });
+      console.log('Carpeta de sesión eliminada.');
+    }
+    // Reiniciar el cliente
+    if (client) {
+      await client.destroy();
+    }
+    setTimeout(() => {
+      client.initialize();
+      console.log('Cliente reinicializado tras reset de sesión.');
+    }, 2000);
+    res.send('Sesión eliminada y bot reiniciado. Escanea un nuevo QR.');
+  } catch (err) {
+    console.error('Error al resetear la sesión:', err);
+    res.status(500).send('Error al resetear la sesión: ' + err.message);
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));

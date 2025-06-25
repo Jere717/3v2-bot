@@ -14,10 +14,34 @@ app.use(bodyParser.json());
 let qrString = null;
 let clientReady = false;
 
+const puppeteerArgs = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-accelerated-2d-canvas',
+  '--no-first-run',
+  '--no-zygote',
+  '--single-process',
+  '--disable-gpu'
+];
+
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './sessions' }),
   puppeteer: {
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: puppeteerArgs,
+    headless: true,
+    defaultViewport: null,
+  }
+});
+
+// Forzar user-agent realista cuando se abre el navegador
+client.on('browser_open', async (browser) => {
+  try {
+    const [page] = await browser.pages();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    console.log('User-Agent personalizado aplicado a Puppeteer');
+  } catch (err) {
+    console.error('Error aplicando User-Agent:', err);
   }
 });
 
@@ -40,13 +64,17 @@ client.on('ready', () => {
   console.log('WhatsApp conectado y listo!');
 });
 
+client.on('disconnected', (reason) => {
+  console.log('Cliente desconectado:', reason);
+});
+
 client.on('message', async msg => {
   // Aquí puedes consultar el Sheet y responder usando Mistral
   // const config = await getSheetConfig();
   // const mistralReply = await getMistralResponse(msg.body, config);
   // msg.reply(mistralReply);
   // await logToSheet(msg.from, msg.body, mistralReply);
-  msg.reply('¡Hola! Bot activo.');
+  msg.reply('Ignoren estos mensajes. Estoy programando un BOT que los envia automaticamente y necesito saber si funciona. Disculpen');
 });
 
 client.initialize();

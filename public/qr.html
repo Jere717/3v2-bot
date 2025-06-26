@@ -12,21 +12,39 @@
 </head>
 <body>
   <h2>Generar QR para WhatsApp</h2>
+  <button id="start-btn">Iniciar WhatsApp</button>
+  <button id="stop-btn">Detener WhatsApp</button>
   <button id="gen-btn">Generar QR</button>
-  <button id="toggle-btn">Desactivar generación</button>
+  <button id="pause-btn">Pausar QR</button>
+  <button id="resume-btn">Reanudar QR</button>
   <div id="status"></div>
   <img id="qr-img" src="" alt="QR" style="display:none;" />
   <script>
-    let qrActive = true;
+    let waActive = false;
+    document.getElementById('start-btn').onclick = async function() {
+      document.getElementById('status').innerText = 'Iniciando cliente WhatsApp...';
+      const res = await fetch('/wa/start', { method: 'POST' });
+      const data = await res.json();
+      waActive = data.status === '0';
+      document.getElementById('status').innerText = data.message;
+    };
+    document.getElementById('stop-btn').onclick = async function() {
+      document.getElementById('status').innerText = 'Deteniendo cliente WhatsApp...';
+      const res = await fetch('/wa/stop', { method: 'POST' });
+      const data = await res.json();
+      waActive = !(data.status === '0');
+      document.getElementById('status').innerText = data.message;
+      document.getElementById('qr-img').style.display = 'none';
+    };
     document.getElementById('gen-btn').onclick = async function() {
-      if (!qrActive) {
-        document.getElementById('status').innerText = 'La generación de QR está desactivada.';
+      if (!waActive) {
+        document.getElementById('status').innerText = 'Debes iniciar el cliente WhatsApp primero.';
         return;
       }
       document.getElementById('status').innerText = 'Solicitando QR...';
       document.getElementById('qr-img').style.display = 'none';
       try {
-        const res = await fetch('/qr');
+        const res = await fetch('/qr/generate');
         const data = await res.json();
         if (data.qr) {
           document.getElementById('qr-img').src = data.qr;
@@ -39,10 +57,16 @@
         document.getElementById('status').innerText = 'Error al solicitar el QR.';
       }
     };
-    document.getElementById('toggle-btn').onclick = function() {
-      qrActive = !qrActive;
-      this.innerText = qrActive ? 'Desactivar generación' : 'Activar generación';
-      document.getElementById('status').innerText = qrActive ? 'Generación de QR activada.' : 'Generación de QR desactivada.';
+
+    document.getElementById('pause-btn').onclick = async function() {
+      const res = await fetch('/qr/pause', { method: 'POST' });
+      const data = await res.json();
+      document.getElementById('status').innerText = data.message;
+    };
+    document.getElementById('resume-btn').onclick = async function() {
+      const res = await fetch('/qr/resume', { method: 'POST' });
+      const data = await res.json();
+      document.getElementById('status').innerText = data.message;
     };
   </script>
 </body>

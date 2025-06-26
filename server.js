@@ -18,16 +18,53 @@ const SHEET_ID = process.env.SHEET_ID;
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;
 
 const bot = BotLogic;
+
 const whatsappClient = new WhatsAppClient();
 const mistralClient = new MistralAIClient(MISTRAL_API_KEY);
 
-whatsappClient.initialize();
+// Control de inicio/parada del cliente WhatsApp
+let waActive = false;
 
-// Cooldown para generación de QR (2 minutos)
+app.post('/wa/start', (req, res) => {
+  if (!waActive) {
+    whatsappClient.initialize();
+    waActive = true;
+    res.json({ status: '0', message: 'Cliente WhatsApp iniciado.' });
+  } else {
+    res.json({ status: '-1', message: 'Ya está iniciado.' });
+  }
+});
+
+app.post('/wa/stop', (req, res) => {
+  if (waActive) {
+    whatsappClient.destroy();
+    waActive = false;
+    res.json({ status: '0', message: 'Cliente WhatsApp detenido.' });
+  } else {
+    res.json({ status: '-1', message: 'Ya está detenido.' });
+  }
+});
+
+
+// Cooldown y control de pausa para generación de QR
 let lastQRTime = 0;
 const QR_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutos
+let qrPaused = false;
 
-app.get('/qr', (req, res) => {
+app.post('/qr/pause', (req, res) => {
+  qrPaused = true;
+  res.json({ status: '0', message: 'Generación de QR pausada.' });
+});
+
+app.post('/qr/resume', (req, res) => {
+  qrPaused = false;
+  res.json({ status: '0', message: 'Generación de QR reanudada.' });
+});
+
+app.get('/qr/generate', (req, res) => {
+  if (qrPaused) {
+    return res.json({ status: '-3', message: 'La generación de QR está pausada.' });
+  }
   const now = Date.now();
   const qr = whatsappClient.getQRCode();
   if (qr) {

@@ -4,10 +4,17 @@ const qrcode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 
+
 class WhatsAppClient {
   constructor() {
     this.qrCode = null;
     this.ready = false;
+    this.client = null;
+    this.initialized = false;
+  }
+
+  initialize() {
+    if (this.initialized) return;
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: './sessions' }),
       puppeteer: {
@@ -25,6 +32,34 @@ class WhatsAppClient {
         defaultViewport: null
       }
     });
+    this.client.on('qr', async (qr) => {
+      this.qrCode = await qrcode.toDataURL(qr);
+      const qrImagePath = path.join(__dirname, '../qr.png');
+      await qrcode.toFile(qrImagePath, qr);
+      console.log('QR Code generado');
+    });
+    this.client.on('ready', () => {
+      this.ready = true;
+      this.qrCode = null;
+      console.log('WhatsApp listo');
+    });
+    this.client.on('disconnected', (reason) => {
+      this.ready = false;
+      console.log('Cliente desconectado:', reason);
+    });
+    this.client.initialize();
+    this.initialized = true;
+  }
+
+  destroy() {
+    if (this.client) {
+      this.client.destroy();
+      this.client = null;
+      this.initialized = false;
+      this.ready = false;
+      this.qrCode = null;
+      console.log('WhatsApp client destruido');
+    }
   }
 
   initialize() {

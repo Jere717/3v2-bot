@@ -1,14 +1,14 @@
 // utils/mistralClient.js
-const { MistralClient } = require('@mistralai/mistralai');
+const { Mistral } = require('@mistralai/mistralai');
 
 class MistralAIClient {
   constructor(apiKey) {
-    this.client = new MistralClient(apiKey); // El apiKey se pasa como string
+    this.client = new Mistral({ apiKey });
   }
 
-  async generateResponse(prompt, model = 'mistral-small') {
+  async generateResponse(prompt, model = 'mistral-large-latest') {
     try {
-      const chatResponse = await this.client.chat({
+      const chatResponse = await this.client.chat.complete({
         model,
         messages: [{ role: 'user', content: prompt }]
       });

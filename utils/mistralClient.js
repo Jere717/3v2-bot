@@ -1,9 +1,9 @@
 // utils/mistralClient.js
-const MistralClient = require('@mistralai/mistralai').default;
+const { MistralClient } = require('@mistralai/mistralai');
 
 class MistralAIClient {
   constructor(apiKey) {
-    this.client = new MistralClient(apiKey);
+    this.client = new MistralClient({ apiKey });
   }
 
   async generateResponse(prompt, model = 'mistral-small') {

@@ -14,10 +14,13 @@ class WhatsAppClient {
   }
 
   initialize() {
+    // Siempre crea una nueva instancia limpia
     if (this.client) {
-      // Si ya existe, destruir antes de crear uno nuevo
-      this.destroy();
+      try { this.client.destroy(); } catch (e) {}
+      this.client = null;
     }
+    this.qrCode = null;
+    this.ready = false;
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: './sessions' }),
       puppeteer: {
@@ -51,7 +54,6 @@ class WhatsAppClient {
       console.log('Cliente desconectado:', reason);
     });
     this.client.initialize();
-    this.initialized = true;
   }
 
   destroy() {

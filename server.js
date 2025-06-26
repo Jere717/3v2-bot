@@ -19,14 +19,23 @@ const mistralClient = new MistralAIClient(MISTRAL_API_KEY);
 
 whatsappClient.initialize();
 
-// Endpoint para QR
+// Cooldown para generación de QR (2 minutos)
+let lastQRTime = 0;
+const QR_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutos
+
 app.get('/qr', (req, res) => {
+  const now = Date.now();
   const qr = whatsappClient.getQRCode();
   if (qr) {
+    lastQRTime = now;
     res.json({ status: '0', qr });
   } else if (whatsappClient.isReady()) {
     res.json({ status: '0', message: 'CONECTADO' });
+  } else if (now - lastQRTime < QR_COOLDOWN_MS) {
+    const waitSec = Math.ceil((QR_COOLDOWN_MS - (now - lastQRTime)) / 1000);
+    res.json({ status: '-2', message: `Espera ${waitSec} segundos antes de pedir otro QR para evitar bloqueo.` });
   } else {
+    lastQRTime = now;
     res.json({ status: '-1', message: 'Generando QR...' });
   }
 });

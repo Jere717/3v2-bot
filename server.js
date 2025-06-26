@@ -6,9 +6,13 @@ const BotLogic = require('./utils/botLogic');
 const WhatsAppClient = require('./utils/whatsappClient');
 const MistralAIClient = require('./utils/mistralClient');
 
+
+const path = require('path');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+// Servir archivos estáticos de la carpeta public
+app.use(express.static(path.join(__dirname, 'public')));
 
 const SHEET_ID = process.env.SHEET_ID;
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY;

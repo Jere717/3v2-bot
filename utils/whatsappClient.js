@@ -14,7 +14,10 @@ class WhatsAppClient {
   }
 
   initialize() {
-    if (this.initialized) return;
+    if (this.client) {
+      // Si ya existe, destruir antes de crear uno nuevo
+      this.destroy();
+    }
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: './sessions' }),
       puppeteer: {

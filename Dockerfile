@@ -33,6 +33,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+COPY public ./public
 RUN chmod +x /app/entrypoint.sh
 EXPOSE 3000
 ENTRYPOINT ["/app/entrypoint.sh"]

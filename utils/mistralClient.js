@@ -1,8 +1,9 @@
 const { Mistral } = require('@mistralai/mistralai');
 
+
 class MistralAIClient {
   constructor(apiKey) {
-    this.client = new Mistral({ apiKey });  // ⚠️ Usa "Mistral", no MistralClient
+    this.client = new Mistral({ apiKey }); // El apiKey debe ir como objeto
   }
 
   async generateResponse(prompt, model = 'mistral-large-latest') {
